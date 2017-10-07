@@ -7,14 +7,12 @@ import HybridChart from './components/HybridChart'
 import * as d3 from 'd3'
 import ReactDOM from 'react-dom'
 import { parseTime, yearMonthDayWithDash, daysBackDate } from './components/Utils'
-
+import $ from 'jquery'
 
 
 const thirtyDays = 30;
 const nintyDays = 90;
 const todayDate = new Date()
-//sample changes
-
 
 
 class ShoppingcartTrend extends React.Component {
@@ -106,6 +104,7 @@ class AddColorForm2 extends React.Component {
 
 	constructor(props) {
 		super(props)
+		this.props.globalWidth = 800;
 		this.state = {
 			sprs: {
 				tabClicked: true,
@@ -121,8 +120,10 @@ class AddColorForm2 extends React.Component {
 				startDate: '',
 				endDate: ''
 
-			}
+			},
+			windowWidth: this.props.globalWidth
 		}
+		
 		this.submit = this.submit.bind(this)
 		this.tick = this.tick.bind(this)
 		//console.log("Constructor Called:" + GetSPRSRevenues().then(data => data))
@@ -139,12 +140,28 @@ class AddColorForm2 extends React.Component {
 	}
 	componentDidMount() {
 
-
+		this.windowResize()
 
 
 	}
 
 	componentWillMount() {
+
+		var _self = this;
+		
+		 $(window).on("resize",(e)=>
+			{
+
+				this.windowResize()
+			var node = ReactDOM.findDOMNode(this)
+			console.log("Node: "+ node)
+			console.log("Node: "+ $(node).width())
+			console.log("Window width: "+ $(window).width())
+			console.log("Window width: "+ $(document).width())
+			
+		}
+		) 
+		
 		this.tick()
 		this.timerID = setInterval(
 			() => this.tick()
@@ -194,6 +211,14 @@ class AddColorForm2 extends React.Component {
 
 	}
 
+	windowResize(){
+		let currenWidth = $(document).width()
+		if (this.props.globalWidth>currenWidth){
+		this.setState({windowWidth:currenWidth-30})
+		} else {
+			this.setState({windowWidth:this.props.globalWidth})
+		}
+	}
 	render() {
 		const { sprs } = this.state
 		let graphs1 = null;
@@ -202,7 +227,7 @@ class AddColorForm2 extends React.Component {
 			graphs1 = <HybridChart data={this.state.sprs.data}
 				maringProp={{ top: 20, right: 20, bottom: 20, left: 20 }}
 				paddingProp={{ top: 60, right: 60, bottom: 60, left: 60 }}
-				oWidht={800}
+				oWidht={this.state.windowWidth}
 				oHeight={500}
 				pathLineStrokWidth="2.25"
 			/>

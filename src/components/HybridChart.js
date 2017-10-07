@@ -70,15 +70,25 @@ class HybridChart extends React.Component {
         const lastYearRevenueList2 = lastYearRevenueData.map((d) => d[1])
         const allRevenueData = currentRevenueList1.concat(lastYearRevenueList2)
 
+        const currentDateList1 = currentRevenueData.map((d) => d[0])
+        const lastYearDateList2 = lastYearRevenueData.map((d) => d[0])
+
+        const unique1 = [...new Set(currentDateList1)]
+        const unique2 = [...new Set(lastYearDateList2)]
+        const uniqueDates =  [... new Set(unique1.concat(unique2))].sort((a,b)=> a-b) // get unique dates
+
+        console.log("Uniquer1:" + unique1)
+        console.log("Uniquer2:" + unique2)
+        console.log("Uniquer3:" + uniqueDates)
 
         // get MAX date for XScale
-        const startDate = d3.min(currentRevenueData,
-            function (d) { return new Date(d[0]) }
+        const startDate = d3.min(uniqueDates,
+            function (d) { return new Date(d) }
         )
 
         // get MIN date for xScale
-        const endDate = d3.max(currentRevenueData,
-            function (d) { return new Date(d[0]) }
+        const endDate = d3.max(uniqueDates,
+            function (d) { return new Date(d) }
         )
 
         console.log("Min Start date: " + startDate)
@@ -90,9 +100,14 @@ class HybridChart extends React.Component {
 
 
         // Building xScale
-        const xScale = d3.scaleTime()
+        /* const xScale = d3.scaleTime()
             .domain([startFinal, endFinal])
-            .rangeRound([0, width])
+            .rangeRound([0, width]) */
+
+        
+        const xScale = d3.scaleBand()
+                                    .domain(uniqueDates.map((d)=> new Date(d)))
+                                    .range([0,width])
 
         // get max value for YScale
         const maxRevenueForYAxis = d3.max(allRevenueData, (d) => d)
@@ -128,6 +143,7 @@ class HybridChart extends React.Component {
             .y(function (d) {
                 return yScale(d[1])
             })
+        const barWidth = (width) / currentRevenueData.length
         return (
             <SVG height={outerHeight} width={outerWidth} ref={node => this.node = node} >
                 <g transform={firstG}>
@@ -138,11 +154,11 @@ class HybridChart extends React.Component {
                             fontSize="10" fontFamily="sans-serif"
                             textAnchor="middle">
 
-                            <path className="domain" stroke="#000" d={"M0.5 6 V0.5 H" + width} />
+                            <path className="domain" stroke="#001F52" d={"M0.5 6 V0.5 H" + width} />
                             {lablesData.map((d) =>
                                 <g className="tick" opacity="1" transform={"translate(" + xScale(new Date(d[0])) + ",0)"}>
-                                    <line stroke="#000" y2="6" x1="0.5" x2="0.5" />
-                                    <text fill="#000" y="9" x="0.5" dy="0.71em">{parseTime(new Date(d[0]))}</text>
+                                    <line stroke="#001F52" y2="6" x1="0.5" x2="0.5" />
+                                    <text fill="#001F52" y="9" x="0.5" dy="0.71em">{parseTime(new Date(d[0]))}</text>
                                 </g>
 
                             )
@@ -154,11 +170,11 @@ class HybridChart extends React.Component {
                             fontSize="10" fontFamily="sans-serif"
                             textAnchor="end">
 
-                            <path class="domain" stroke="#000" d={"M-6," + (height + 0.5) + "H0.5V0.5H-6"}></path>
+                            <path class="domain" stroke="#001F52" d={"M-6," + (height + 0.5) + "H0.5V0.5H-6"}></path>
                             {yScale.ticks().map((d) =>
                                 <g className="tick" opacity="1" transform={"translate(0," + yScale(d) + ")"}>
-                                    <line stroke="#000" y1="0.5" y2="0.5" x2="-6" />
-                                    <text fill="#000" x="-9" y="0.5" dy="0.32em">{"$"+currencyFormat(d)}</text>
+                                    <line stroke="#001F52" y1="0.5" y2="0.5" x2="-6" />
+                                    <text fill="#001F52" x="-9" y="0.5" dy="0.32em">{"$" + currencyFormat(d)}</text>
                                 </g>
 
                             )
@@ -180,14 +196,14 @@ class HybridChart extends React.Component {
 
 
                         {/* this is Rect graph part */}
-                        <g className="garea">
+                        <g className="bar-graph">
                             {
                                 currentRevenueData.map((d, i) =>
                                     <Rectangle x={xScale(new Date(d[0]))}
                                         y={yScale(d[1])}
-                                        width={Math.floor((width - 200) / currentRevenueData.length)}
+                                        width={xScale.bandwidth() -4}
                                         height={height - yScale(d[1])}
-                                        fill={"rgb(218, 135," + Math.floor(yScale(d[1])) + ")"}
+                                        fill={"#C06C84"}
                                         dataValue={d[1]}
                                     />
                                 )
@@ -197,7 +213,7 @@ class HybridChart extends React.Component {
 
                         {/* this is line graph part */}
                         <g>
-                            <Path lineFunction={line} data={lastYearRevenueData} stroke="#138808" fill="none" strokeWidth={pathLineStrokWidth} strokeLineJoin="round" strokeLineCap="round" />
+                            <Path classNm="line-graph" lineFunction={line} data={lastYearRevenueData} />
 
                         </g>
 
@@ -208,11 +224,11 @@ class HybridChart extends React.Component {
                                 lastYearRevenueData.map((d) => {
                                     return ([
                                         <circle cx={xScale(new Date(d[0]))} cy={yScale(d[1])}
-                                            r="3" fill="white" stroke="steelblue" strokeOpacity="0.1"
+                                            r="3" fill="white" stroke="#FF8D68" strokeOpacity="0.1"
 
                                         />,
                                         <circle cx={xScale(new Date(d[0]))} cy={yScale(d[1])}
-                                            r="3" fill="none" stroke="#008000" strokeOpacity="1.1"
+                                            r="3" fill="none" stroke="#FF8D68" strokeOpacity="1.1"
                                             strokeWidth="2.5"
 
                                         />
@@ -248,7 +264,7 @@ class Rectangle extends React.Component {
     }
 
     render() {
-        const { classNm, id, x, y, width, height, fill, rx = 3, ry = 3, dataValue } = this.props
+        const { classNm, id, x, y, width, height, fill, rx = 0, ry = 0, dataValue } = this.props
 
         return (
 
@@ -265,12 +281,11 @@ class Path extends React.Component {
     }
     render() {
 
-        const { classNm, id, lineFunction, data, stroke, fill = "none", strokeWidth = "1.5", strokeLineJoin = "round", strokeLineCap = "round" } = this.props
+        const { classNm, id, lineFunction, data } = this.props
 
         return (
-            <path className={classNm} id={id} className="line shadow" d={lineFunction(data)}
-                fill={fill} stroke={stroke} stroke-linejoin={strokeLineJoin} stroke-linecap={strokeLineCap}
-                strokeWidth={strokeWidth} />
+            <path className={classNm} id={id} d={lineFunction(data)}
+            />
         )
     }
 
@@ -302,7 +317,7 @@ class AxisGrid extends React.Component {
         const { classNm, id, width, yTranslate } = this.props
         return (
 
-            <line className={classNm} id={id} opacity="0.1" stroke="#000" x1="0" y1="0.5" y2="0.5" x2={width} transform={"translate(0," + yTranslate + ")"} />
+            <line className={classNm} id={id} opacity="0.1" stroke="#001F52" x1="0" y1="0.5" y2="0.5" x2={width} transform={"translate(0," + yTranslate + ")"} />
 
         )
     }
