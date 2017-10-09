@@ -46,6 +46,8 @@ class HybridChart extends React.Component {
         const node = this.node
         const reactDom = ReactDOM.findDOMNode(this)
 
+
+
         const { data, maringProp, paddingProp, oWidht, oHeight, pathLineStrokWidth = "1.5" } = this.props
 
         const margin = maringProp,
@@ -75,7 +77,7 @@ class HybridChart extends React.Component {
 
         const unique1 = [...new Set(currentDateList1)]
         const unique2 = [...new Set(lastYearDateList2)]
-        const uniqueDates =  [... new Set(unique1.concat(unique2))].sort((a,b)=> a-b) // get unique dates
+        const uniqueDates = [... new Set(unique1.concat(unique2))].sort((a, b) => a - b) // get unique dates
 
         console.log("Uniquer1:" + unique1)
         console.log("Uniquer2:" + unique2)
@@ -104,10 +106,10 @@ class HybridChart extends React.Component {
             .domain([startFinal, endFinal])
             .rangeRound([0, width]) */
 
-        
+
         const xScale = d3.scaleBand()
-                                    .domain(uniqueDates.map((d)=> new Date(d)))
-                                    .range([0,width])
+            .domain(uniqueDates.map((d) => new Date(d)))
+            .range([0, width])
 
         // get max value for YScale
         const maxRevenueForYAxis = d3.max(allRevenueData, (d) => d)
@@ -135,6 +137,8 @@ class HybridChart extends React.Component {
         // X AXIS line and the labels 
         const lablesData = getXAxisLabels(currentRevenueData, 5)
 
+        const barWidth = xScale.bandwidth() - 4
+        //const barWidth = (width) / currentRevenueData.length
 
         const line = d3.line()
             .x(function (d) {
@@ -143,14 +147,15 @@ class HybridChart extends React.Component {
             .y(function (d) {
                 return yScale(d[1])
             })
-        const barWidth = (width) / currentRevenueData.length
+            .curve(d3.curveCardinal) 
+       
         return (
             <SVG height={outerHeight} width={outerWidth} ref={node => this.node = node} >
                 <g transform={firstG}>
                     <g transform={secondG}>
 
                         {/* this is X Axis Display part */}
-                        <g className="axis" transform={"translate(5," + height + ")"} fill="none"
+                        <g className="axis" transform={"translate(10," + height + ")"} fill="none"
                             fontSize="10" fontFamily="sans-serif"
                             textAnchor="middle">
 
@@ -166,7 +171,7 @@ class HybridChart extends React.Component {
                         </g>
 
                         {/* this is y Axis Display part */}
-                        <g className="axis" transform={"translate(0,0)"} fill="none"
+                        <g className="axis" transform={"translate(-5,1)"} fill="none"
                             fontSize="10" fontFamily="sans-serif"
                             textAnchor="end">
 
@@ -201,9 +206,9 @@ class HybridChart extends React.Component {
                                 currentRevenueData.map((d, i) =>
                                     <Rectangle x={xScale(new Date(d[0]))}
                                         y={yScale(d[1])}
-                                        width={xScale.bandwidth() -4}
+                                        width={barWidth}
                                         height={height - yScale(d[1])}
-                                        fill={"#C06C84"}
+                                        fill={"#247BA0"}
                                         dataValue={d[1]}
                                     />
                                 )
@@ -223,11 +228,13 @@ class HybridChart extends React.Component {
 
                                 lastYearRevenueData.map((d) => {
                                     return ([
-                                        <circle cx={xScale(new Date(d[0]))} cy={yScale(d[1])}
+
+                                       
+                                        <Circle classNm="circle1"  x={xScale(new Date(d[0]))} y={yScale(d[1])}
                                             r="3" fill="white" stroke="#FF8D68" strokeOpacity="0.1"
 
                                         />,
-                                        <circle cx={xScale(new Date(d[0]))} cy={yScale(d[1])}
+                                        <Circle classNm="circle2" x={xScale(new Date(d[0]))} y={yScale(d[1])}
                                             r="3" fill="none" stroke="#FF8D68" strokeOpacity="1.1"
                                             strokeWidth="2.5"
 
@@ -264,11 +271,13 @@ class Rectangle extends React.Component {
     }
 
     render() {
-        const { classNm, id, x, y, width, height, fill, rx = 0, ry = 0, dataValue } = this.props
+        const { classNm, id, x, y, width, height, fill, rx = 0, ry = 0, dataValue, translateX=1, translateY=-5 } = this.props
 
         return (
 
-            <rect className={classNm} id={id} x={x} y={y} width={width} height={height} fill={fill} rx={rx} ry={ry} data-value={dataValue} />
+            <rect className={classNm} id={id} x={x} y={y} 
+            width={width} height={height} fill={fill} rx={rx} ry={ry} data-value={dataValue}
+            transform={"translate("+translateX + "," + translateY + ")"} />
         )
     }
 }
@@ -300,9 +309,9 @@ class Circle extends React.Component {
 
     render() {
 
-        const { classNm, id, x, y, r, fill = "none", stoke, strokeOpacity = "0.1", strokeWidth } = this.props
+        const { classNm, id, x, y, r, fill = "none", stroke, strokeOpacity = "0.1", strokeWidth } = this.props
         return (
-            <circle cx={x} cy={y} r={r} fill={fill} stroke={stroke} stroke-opacity={strokeOpacity} stroke-width={strokeWidth} />
+            <circle className={classNm} cx={x} cy={y} r={r} fill={fill} stroke={stroke} stroke-opacity={strokeOpacity} stroke-width={strokeWidth} />
         )
     }
 }

@@ -152,7 +152,7 @@ class AddColorForm2 extends React.Component {
 		 $(window).on("resize",(e)=>
 			{
 
-				this.windowResize()
+			this.windowResize()
 			var node = ReactDOM.findDOMNode(this)
 			console.log("Node: "+ node)
 			console.log("Node: "+ $(node).width())
@@ -165,7 +165,7 @@ class AddColorForm2 extends React.Component {
 		this.tick()
 		this.timerID = setInterval(
 			() => this.tick()
-			, 5000
+			, 50000
 
 		);
 	}
@@ -222,9 +222,20 @@ class AddColorForm2 extends React.Component {
 	render() {
 		const { sprs } = this.state
 		let graphs1 = null;
-		let graph2 = null;
+		let graphs2 = null;
 		if (sprs.dataAvailable) {
 			graphs1 = <HybridChart data={this.state.sprs.data}
+				maringProp={{ top: 20, right: 20, bottom: 20, left: 20 }}
+				paddingProp={{ top: 60, right: 60, bottom: 60, left: 60 }}
+				oWidht={this.state.windowWidth}
+				oHeight={500}
+				pathLineStrokWidth="2.25"
+			/>
+			//graph2 = <HybridChart data={this.state.type.data} />
+		}
+
+		if (sprs.dataAvailable) {
+			graphs2 = <HybridChart data={this.state.sprs.data}
 				maringProp={{ top: 20, right: 20, bottom: 20, left: 20 }}
 				paddingProp={{ top: 60, right: 60, bottom: 60, left: 60 }}
 				oWidht={this.state.windowWidth}
@@ -253,8 +264,12 @@ class AddColorForm2 extends React.Component {
 
 				</div>
 
-				<div id="mygraphs">
+				<div id="mygraphs1">
 					{graphs1}
+				</div>
+
+				<div id="mygraphs2">
+					{graphs2}
 				</div>
 
 				}
