@@ -48,7 +48,8 @@ class HybridChart extends React.Component {
 
 
 
-        const { data, maringProp, paddingProp, oWidht, oHeight, pathLineStrokWidth = "1.5" } = this.props
+        const { data, maringProp, paddingProp, oWidht, oHeight,
+            pathLineStrokWidth = "1.5", onMouseOver, onMouseOut } = this.props
 
         const margin = maringProp,
             padding = paddingProp,
@@ -147,10 +148,23 @@ class HybridChart extends React.Component {
             .y(function (d) {
                 return yScale(d[1])
             })
-            .curve(d3.curveCardinal) 
-       
+            .curve(d3.curveCatmullRom)
+
         return (
             <SVG height={outerHeight} width={outerWidth} ref={node => this.node = node} >
+                <g>
+
+                    <g>
+                        <g transform="translate(100,20)" className="legend1">
+                            <circle  r="7" cx="5" cy="15"></circle>
+                            <text x="15" y="20">{data[0][0].label} </text>
+                        </g>
+                        <g transform="translate(100,40)" className="legend2">
+                            <circle id="legend2" r="7" cx="5" cy="15"></circle>
+                            <text x="15" y="20">{data[0][1].label} </text></g>
+
+                    </g>
+                </g>
                 <g transform={firstG}>
                     <g transform={secondG}>
 
@@ -163,7 +177,7 @@ class HybridChart extends React.Component {
                             {lablesData.map((d) =>
                                 <g className="tick" opacity="1" transform={"translate(" + xScale(new Date(d[0])) + ",0)"}>
                                     <line stroke="#001F52" y2="6" x1="0.5" x2="0.5" />
-                                    <text fill="#001F52" y="9" x="0.5" dy="0.71em">{parseTime(new Date(d[0]))}</text>
+                                    <text fill="#001F52" y="9" x="0.5" dy="0.71em" transform="translate(20,13) rotate(40,0.5,9)">{parseTime(new Date(d[0]))}</text>
                                 </g>
 
                             )
@@ -227,16 +241,23 @@ class HybridChart extends React.Component {
                             {
 
                                 lastYearRevenueData.map((d) => {
+                                    const xValue = xScale(new Date(d[0]))
+                                    const yValue = yScale(d[1])
+
                                     return ([
 
-                                       
-                                        <Circle classNm="circle1"  x={xScale(new Date(d[0]))} y={yScale(d[1])}
+
+                                        <Circle classNm="circle1" x={xValue} y={yValue}
                                             r="3" fill="white" stroke="#FF8D68" strokeOpacity="0.1"
 
                                         />,
-                                        <Circle classNm="circle2" x={xScale(new Date(d[0]))} y={yScale(d[1])}
+                                        <Circle classNm="circle2" x={xValue} y={yValue}
                                             r="3" fill="none" stroke="#FF8D68" strokeOpacity="1.1"
-                                            strokeWidth="2.5"
+                                            strokeWidth="2.5" onMouseOver={() =>
+                                                onMouseOver((xValue + barWidth / 2), (yValue / 2 + height / 2),
+                                                    d[0], d[1], 30)}
+                                            onMouseOut={() => onMouseOut}
+                                            ref="mycircle"
 
                                         />
 
@@ -271,13 +292,13 @@ class Rectangle extends React.Component {
     }
 
     render() {
-        const { classNm, id, x, y, width, height, fill, rx = 0, ry = 0, dataValue, translateX=1, translateY=-5 } = this.props
+        const { classNm, id, x, y, width, height, fill, rx = 0, ry = 0, dataValue, translateX = 1, translateY = -5 } = this.props
 
         return (
 
-            <rect className={classNm} id={id} x={x} y={y} 
-            width={width} height={height} fill={fill} rx={rx} ry={ry} data-value={dataValue}
-            transform={"translate("+translateX + "," + translateY + ")"} />
+            <rect className={classNm} id={id} x={x} y={y}
+                width={width} height={height} fill={fill} rx={rx} ry={ry} data-value={dataValue}
+                transform={"translate(" + translateX + "," + translateY + ")"} />
         )
     }
 }
@@ -309,9 +330,13 @@ class Circle extends React.Component {
 
     render() {
 
-        const { classNm, id, x, y, r, fill = "none", stroke, strokeOpacity = "0.1", strokeWidth } = this.props
+        const { classNm, id, x, y, r, fill = "none", stroke, strokeOpacity = "0.1", strokeWidth, onMouseOver,
+            onMouseOut, ref } = this.props
         return (
-            <circle className={classNm} cx={x} cy={y} r={r} fill={fill} stroke={stroke} stroke-opacity={strokeOpacity} stroke-width={strokeWidth} />
+            <circle className={classNm} cx={x} cy={y} r={r} fill={fill} stroke={stroke}
+                stroke-opacity={strokeOpacity} stroke-width={strokeWidth} onMouseOver={onMouseOver}
+                onMouseOut={onMouseOut}
+            />
         )
     }
 }

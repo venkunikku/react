@@ -8,6 +8,7 @@ import * as d3 from 'd3'
 import ReactDOM from 'react-dom'
 import { parseTime, yearMonthDayWithDash, daysBackDate } from './components/Utils'
 import $ from 'jquery'
+//import * as native from 'react-native';
 
 
 const thirtyDays = 30;
@@ -113,21 +114,22 @@ class AddColorForm2 extends React.Component {
 				startDate: yearMonthDayWithDash(todayDate),
 				endDate: yearMonthDayWithDash(daysBackDate())
 			},
-			type: {
-				tabClicked: false,
+			revenueTotal: {
+				tabClicked: true,
 				data: [],
 				dataAvailable: false,
-				startDate: '',
-				endDate: ''
+				startDate: yearMonthDayWithDash(todayDate),
+				endDate: yearMonthDayWithDash(daysBackDate())
 
 			},
-			windowWidth: this.props.globalWidth
+			windowWidth: this.props.globalWidth,
+			tooltip: false
 		}
-		
+
 		this.submit = this.submit.bind(this)
 		this.tick = this.tick.bind(this)
-		//console.log("Constructor Called:" + GetSPRSRevenues().then(data => data))
-
+		this.tooltipFnc = this.tooltipFnc.bind(this)
+		this.tooltipMouseOut = this.tooltipMouseOut.bind(this)
 	}
 
 	submit(e) {
@@ -148,20 +150,19 @@ class AddColorForm2 extends React.Component {
 	componentWillMount() {
 
 		var _self = this;
-		
-		 $(window).on("resize",(e)=>
-			{
+
+		$(window).on("resize", (e) => {
 
 			this.windowResize()
 			var node = ReactDOM.findDOMNode(this)
-			console.log("Node: "+ node)
-			console.log("Node: "+ $(node).width())
-			console.log("Window width: "+ $(window).width())
-			console.log("Window width: "+ $(document).width())
-			
+			console.log("Node: " + node)
+			console.log("Node: " + $(node).width())
+			console.log("Window width: " + $(window).width())
+			console.log("Window width: " + $(document).width())
+
 		}
-		) 
-		
+		)
+
 		this.tick()
 		this.timerID = setInterval(
 			() => this.tick()
@@ -178,6 +179,23 @@ class AddColorForm2 extends React.Component {
 		console.log('updating lifecycle')
 	}
 
+	tooltipFnc(x, y, dt, rev, daysBack) {
+
+		/* 		this.refs.mycircle.measure((x,y,width,height,px,py) =>{
+					console.log("Coordinates: "+ x);
+				}) */
+
+		this.setState({ tooltip: true })
+		this.props.x = x
+		this.props.y = y
+		this.props.date = dt
+		this.props.revenue = rev
+
+	}
+	tooltipMouseOut() {
+		console.log("In Mouse out")
+		this.setState({ tooltip: false })
+	}
 
 	tick() {
 
@@ -198,29 +216,37 @@ class AddColorForm2 extends React.Component {
 				})
 		}
 
-
-		if (this.state.type.tabClicked) {
-			fetch('http://outlet4.dev.ch3.s.com/d/dashboard/service/ffm_trends/2016-1-1/2016-1-2?siteId=9322')
+		if (this.state.revenueTotal.tabClicked) {
+			fetch(`http://outlet4.dev.ch3.s.com/d/dashboard/service/revsnapshot/${this.state.revenueTotal.endDate}/${this.state.revenueTotal.startDate}?siteId=9322`)
 				.then(response => response.json())
 				.then(countryName => {
-					const type = Object.assign({}, this.state.type, { data: [countryName.type], tabClicked: false, dataAvailable: true })
-					this.setState({ type })
+					const revenueTotal = Object.assign({}, this.state.revenueTotal,
+						{
+							data: [countryName.revenueTotal.graphsData],
+							tabClicked: true,
+							dataAvailable: true,
+							startDate: yearMonthDayWithDash(todayDate),
+							endDate: yearMonthDayWithDash(daysBackDate())
+						})
+					this.setState({ revenueTotal })
 				})
 		}
 
 
 	}
 
-	windowResize(){
+	windowResize() {
 		let currenWidth = $(document).width()
-		if (this.props.globalWidth>currenWidth){
-		this.setState({windowWidth:currenWidth-30})
+		if (this.props.globalWidth > currenWidth) {
+			this.setState({ windowWidth: currenWidth - 30 })
 		} else {
-			this.setState({windowWidth:this.props.globalWidth})
+			this.setState({ windowWidth: this.props.globalWidth })
 		}
 	}
 	render() {
-		const { sprs } = this.state
+		const { sprs, revenueTotal } = this.state
+		const { tooltipFnc, tooltipMouseOut } = this
+
 		let graphs1 = null;
 		let graphs2 = null;
 		if (sprs.dataAvailable) {
@@ -230,17 +256,21 @@ class AddColorForm2 extends React.Component {
 				oWidht={this.state.windowWidth}
 				oHeight={500}
 				pathLineStrokWidth="2.25"
+				onMouseOver={tooltipFnc}
+				onMouseOut={tooltipMouseOut}
 			/>
 			//graph2 = <HybridChart data={this.state.type.data} />
 		}
 
-		if (sprs.dataAvailable) {
-			graphs2 = <HybridChart data={this.state.sprs.data}
+		if (revenueTotal.dataAvailable) {
+			graphs2 = <HybridChart data={this.state.revenueTotal.data}
 				maringProp={{ top: 20, right: 20, bottom: 20, left: 20 }}
 				paddingProp={{ top: 60, right: 60, bottom: 60, left: 60 }}
 				oWidht={this.state.windowWidth}
 				oHeight={500}
 				pathLineStrokWidth="2.25"
+				onMouseOver={tooltipFnc}
+				onMouseOut={tooltipMouseOut}
 			/>
 			//graph2 = <HybridChart data={this.state.type.data} />
 		}
@@ -250,19 +280,6 @@ class AddColorForm2 extends React.Component {
 
 
 			<div>
-				<form onSubmit={this.submit}>
-					<input type="text" placeholder="colortitle" ref="_title" required />
-					<input type="color" ref="_color" required />
-					<button> Add </button>
-				</form>
-				<div>
-					{
-						(sprs.data.length) ?
-							<p> Value present {sprs.data.lenght}</p>
-							: <p> Value is not Presenet {sprs.data.lenght}</p>
-					}
-
-				</div>
 
 				<div id="mygraphs1">
 					{graphs1}
@@ -271,14 +288,41 @@ class AddColorForm2 extends React.Component {
 				<div id="mygraphs2">
 					{graphs2}
 				</div>
+				<div id="tooltip-graph">
+					<Tooltip {...this.props} tooltip={this.state.tooltip} />
+				</div>
 
-				}
 			</div>
 		)
 
 
 	}
 
+
+}
+
+
+class Tooltip extends React.Component {
+
+	constructor(props) {
+		super(props)
+	}
+
+	render() {
+		//const {x, y, date, revenue} = this.props 
+		const { tooltip, x, y, date, revenue } = this.props
+		console.log("Insider tooltip: " + tooltip + " x:" + x + " Y: " + y)
+		const styles = {
+			left: x + "px",
+			top: y + "px"
+		}
+		return (
+			<div id="tooltip" className={tooltip ? '' : "hidden"} style={styles}>
+				<p>Date:{date} - {x},{y}</p>
+				<p>Revenue:{revenue} </p>
+			</div>
+		)
+	}
 }
 
 const GetSPRSRevenues = () =>
